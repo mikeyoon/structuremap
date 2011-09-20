@@ -1,5 +1,5 @@
 using System;
-using Castle.Core.Interceptor;
+using Castle.DynamicProxy;
 
 namespace StructureMap.AutoFactory
 {
