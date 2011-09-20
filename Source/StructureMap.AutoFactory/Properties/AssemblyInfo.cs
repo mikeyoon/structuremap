@@ -8,5 +8,5 @@ using System.Security;
 // associated with an assembly.
 [assembly: AssemblyTitle("StructureMap.AutoFactory")]
 [assembly: AssemblyDescription("Auto-building factories")]
-[assembly: AllowPartiallyTrustedCallers]
+//[assembly: AllowPartiallyTrustedCallers]
  

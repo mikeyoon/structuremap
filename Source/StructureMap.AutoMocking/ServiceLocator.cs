@@ -74,4 +74,24 @@ namespace StructureMap.AutoMocking
             return (T) _moqs.CreateMockThatCallsBase(typeof (T), args);
         }
     }
+
+    public class FakeItEasyServiceLocator : ServiceLocator
+    {
+        private readonly FakeItEasyFactory _fie = new FakeItEasyFactory();
+
+        public T Service<T>() where T : class
+        {
+            return (T) _fie.CreateMock(typeof(T));
+        }
+
+        public object Service(Type serviceType)
+        {
+            return _fie.CreateMock(serviceType);
+        }
+
+        public T PartialMock<T>(params object[] args) where T : class
+        {
+            return (T)_fie.CreateMockThatCallsBase(typeof(T), args);
+        }
+    }
 }
