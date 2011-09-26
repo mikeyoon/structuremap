@@ -33,8 +33,6 @@ namespace StructureMap.AutoMocking
 
         public object CreateMockThatCallsBase(Type type, object[] args)
         {
-            var methods = mockOpenType.GetMethods(BindingFlags.Static | BindingFlags.Public);
-
             var optionsBuilderGeneric = fakeOptionsBuilderType.MakeGenericType(new[] { type });
             var optionsBuilderWrapped = fakeOptionsBuilderType.MakeGenericType(new[] {
                     typeof(Action<>).MakeGenericType(new[] {
