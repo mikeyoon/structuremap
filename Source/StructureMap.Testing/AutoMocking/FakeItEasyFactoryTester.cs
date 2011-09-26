@@ -22,8 +22,6 @@ namespace StructureMap.Testing.AutoMocking
             var fieFactory = new FakeItEasyFactory();
             var testPartials = (TestPartials)fieFactory.CreateMockThatCallsBase(typeof(TestPartials), new object[0]);
 
-            A.CallTo(() => testPartials.Virtual()).CallsBaseMethod();
-
             testPartials.ShouldNotBeNull();
             testPartials.Concrete().ShouldEqual("Concrete");
             testPartials.Virtual().ShouldEqual("Virtual");
@@ -38,8 +36,6 @@ namespace StructureMap.Testing.AutoMocking
             var mock = A.Fake<ITestMocks>();
             A.CallTo(() => mock.Answer()).Returns("Fake");
             mock.Answer().ShouldEqual("Fake");
-            //mock.Expect(t => t.Answer()).Returns("Moq");
-            //mock.Object.Answer().ShouldEqual("Moq");
         }
     }
 }

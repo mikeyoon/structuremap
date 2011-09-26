@@ -14,9 +14,14 @@ namespace StructureMap.Testing.AutoMocking
         {
             var autoMocker = new FakeItEasyAutoMocker<AutoMockerTester.ConcreteClass>();
             var mockedService = autoMocker.Get<AutoMockerTester.IMockedService>();
+            
+            int something = 0;
+
+            A.CallTo(() => mockedService.Go()).Invokes(p => something = 4);
+
             autoMocker.ClassUnderTest.CallService();
 
-            A.CallTo(() => mockedService.Go());
+            something.ShouldEqual(4);
         }
     }
 

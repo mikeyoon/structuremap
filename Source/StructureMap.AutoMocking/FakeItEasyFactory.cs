@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using FakeItEasy;
 using System.Reflection;
 using System.Linq.Expressions;
 
@@ -11,10 +10,15 @@ namespace StructureMap.AutoMocking
     public class FakeItEasyFactory
     {
         private readonly Type mockOpenType;
+        private readonly Type fakeOptionsBuilderType;
 
         public FakeItEasyFactory()
         {
-            mockOpenType = typeof(A);
+            Assembly fakeItEasy = Assembly.Load("FakeItEasy");
+            mockOpenType = fakeItEasy.GetType("FakeItEasy.A");
+            fakeOptionsBuilderType = fakeItEasy.GetType("FakeItEasy.Creation.IFakeOptionsBuilder`1");
+
+            //mockOpenType = typeof(A);
             if (mockOpenType == null)
                 throw new InvalidOperationException("Unable to find Type A in assembly FakeItEasy");
         }
@@ -27,18 +31,12 @@ namespace StructureMap.AutoMocking
             return createMethod.Invoke(null, null);
         }
 
-        protected static void DoSomething<T>(FakeItEasy.Creation.IFakeOptionsBuilder<T> builder, IEnumerable<object> args)
-        {
-            builder.WithArgumentsForConstructor(args);
-        }
-
         public object CreateMockThatCallsBase(Type type, object[] args)
         {
             var methods = mockOpenType.GetMethods(BindingFlags.Static | BindingFlags.Public);
-            
-            var optionsBuilderType = typeof(FakeItEasy.Creation.IFakeOptionsBuilder<>);
-            var optionsBuilderGeneric = optionsBuilderType.MakeGenericType(new[] { type } );
-            var optionsBuilderWrapped = typeof(FakeItEasy.Creation.IFakeOptionsBuilder<>).MakeGenericType(new[] {
+
+            var optionsBuilderGeneric = fakeOptionsBuilderType.MakeGenericType(new[] { type });
+            var optionsBuilderWrapped = fakeOptionsBuilderType.MakeGenericType(new[] {
                     typeof(Action<>).MakeGenericType(new[] {
                         optionsBuilderGeneric
                     })
@@ -61,7 +59,15 @@ namespace StructureMap.AutoMocking
             var invoke = Expression.Call(param, withArgsMethod, paramValues);
             var lambda = Expression.Lambda(actionType, invoke, param);
             
-            return fakeWithArgsMethodGeneric.Invoke(null, new object[] { lambda.Compile() });
+            var fake = fakeWithArgsMethodGeneric.Invoke(null, new object[] { lambda.Compile() });
+            var callToMethod = mockOpenType.GetMethod("CallTo", new[] { typeof(object) });
+            var result = callToMethod.Invoke(null, new[] { fake });
+            var callsBaseTypeMethod = result.GetType().GetMethod("CallsBaseMethod");
+            callsBaseTypeMethod.Invoke(result, null);
+
+            //A.CallTo(fake).CallsBaseMethod();
+
+            return fake;
         }
     }
 }
