@@ -11,6 +11,7 @@ namespace StructureMap.AutoMocking
     {
         private readonly Type mockOpenType;
         private readonly Type fakeOptionsBuilderType;
+        private readonly MethodInfo fakeMethod;
 
         public FakeItEasyFactory()
         {
@@ -21,12 +22,13 @@ namespace StructureMap.AutoMocking
             //mockOpenType = typeof(A);
             if (mockOpenType == null)
                 throw new InvalidOperationException("Unable to find Type A in assembly FakeItEasy");
+
+            fakeMethod = mockOpenType.GetMethod("Fake", System.Type.EmptyTypes);
         }
 
         public object CreateMock(Type type)
         {
-            MethodInfo mi = mockOpenType.GetMethod("Fake", System.Type.EmptyTypes);
-            MethodInfo createMethod = mi.MakeGenericMethod(new[] { type });
+            MethodInfo createMethod = fakeMethod.MakeGenericMethod(new[] { type });
 
             return createMethod.Invoke(null, null);
         }
