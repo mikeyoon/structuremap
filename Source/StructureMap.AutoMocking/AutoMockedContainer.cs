@@ -1,6 +1,7 @@
 using System;
 using StructureMap.Graph;
 using StructureMap.Pipeline;
+using System.Linq;
 
 namespace StructureMap.AutoMocking
 {
@@ -19,7 +20,9 @@ namespace StructureMap.AutoMocking
 
             onMissingFactory = delegate(Type pluginType, ProfileManager profileManager)
             {
-                if (!pluginType.IsAbstract && pluginType.IsClass)
+                //Modified to inject concrete classes that have virtual methods
+                if (!pluginType.IsAbstract && pluginType.IsClass && 
+                    !pluginType.GetMethods(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance).Where(p => p.IsVirtual).Any())
                 {
                     return null;
                 }
