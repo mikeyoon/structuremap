@@ -47,19 +47,25 @@ namespace StructureMap.AutoMocking
                 optionsBuilderGeneric
             });
 
-            var fakeWithArgsMethod = mockOpenType.GetMethods(BindingFlags.Static | BindingFlags.Public).Where(p => p.Name == "Fake" && p.GetParameters().Count() > 0).FirstOrDefault();
+            var fakeWithArgsMethod = mockOpenType.GetMethods(BindingFlags.Static | BindingFlags.Public).Where(p => p.Name == "Fake" 
+                && (args.Length > 0 && p.GetParameters().Count() > 0 || args.Length == 0 && p.GetParameters().Count() == 0)).FirstOrDefault();
             var fakeWithArgsMethodGeneric = fakeWithArgsMethod.MakeGenericMethod(new[] { type }); //Action<IFakeOptionsBuilder<type>>
 
-            var withArgsMethod = optionsBuilderGeneric.GetMethod("WithArgumentsForConstructor", new Type[] { typeof(IEnumerable<object>) });
+            LambdaExpression lambda = null;
+
+            if (args.Length > 0)
+            {
+                var withArgsMethod = optionsBuilderGeneric.GetMethod("WithArgumentsForConstructor", new Type[] { typeof(IEnumerable<object>) });
+
+                var paramValues = Expression.Constant(args);
+                var genType = Expression.Parameter(type);
+                var param = Expression.Parameter(optionsBuilderGeneric, "var1");
+                var arguments = Expression.Parameter(args.GetType(), "var2"); //args.Select(p => Expression.Parameter(p.GetType())).ToArray();
+                var invoke = Expression.Call(param, withArgsMethod, paramValues);
+                lambda = Expression.Lambda(actionType, invoke, param);
+            }
             
-            var paramValues = Expression.Constant(args);
-            var genType = Expression.Parameter(type);
-            var param = Expression.Parameter(optionsBuilderGeneric, "var1");
-            var arguments = Expression.Parameter(args.GetType(), "var2"); //args.Select(p => Expression.Parameter(p.GetType())).ToArray();
-            var invoke = Expression.Call(param, withArgsMethod, paramValues);
-            var lambda = Expression.Lambda(actionType, invoke, param);
-            
-            var fake = fakeWithArgsMethodGeneric.Invoke(null, new object[] { lambda.Compile() });
+            var fake = fakeWithArgsMethodGeneric.Invoke(null, lambda != null ? new object[] { lambda.Compile() } : null);
             var callToMethod = mockOpenType.GetMethod("CallTo", new[] { typeof(object) });
             var result = callToMethod.Invoke(null, new[] { fake });
             var callsBaseTypeMethod = result.GetType().GetMethod("CallsBaseMethod");
